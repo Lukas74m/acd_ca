@@ -7,7 +7,9 @@ DATABASE_URL = os.getenv(
     "mariadb+mariadbconnector://user:password@localhost:3306/microservice_db",
 )
 
-engine = create_engine(DATABASE_URL, echo=True)
+engine = create_engine(
+    DATABASE_URL, echo=True
+)  # echo=True for debugging/verbose output
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
