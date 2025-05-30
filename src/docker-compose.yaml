@@ -1,0 +1,74 @@
+services:
+  grades_db:
+      image: mariadb:latest
+      container_name: grades-db
+      restart: always
+      environment:
+        MYSQL_ROOT_PASSWORD: rootpassword
+        MYSQL_DATABASE: grades_db
+        MYSQL_USER: user
+        MYSQL_PASSWORD: password
+      ports:
+        - "3307:3306"
+      volumes:
+        - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+        - grades_db_data:/var/lib/mysql
+      healthcheck:
+        test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+        timeout: 20s
+        retries: 10
+
+  exams_db:
+    image: mariadb:latest
+    container_name: exams-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: exams_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3308:3306"
+    volumes:
+      - ./init_exams.sql:/docker-entrypoint-initdb.d/init_exams.sql
+      - exams_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  grading-service:
+    build:
+      context: "./grading_service"
+      dockerfile: "Dockerfile"
+    image: "gradingimage"
+    container_name: grading-service
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: grades_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "8001:8000"
+
+  enrollment_service:
+    build:
+      context: "./enrollment_service"
+      dockerfile: "Dockerfile"
+    image: "enrollmentimage"
+    container_name: enrollment-service
+    # depends_on:
+    #   exams_db:
+    #     condition: service_healthy
+    ports:
+      - "8002:8000"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: exams_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+
+volumes:
+  grades_db_data:
+  exams_db_data:

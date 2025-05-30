@@ -18,7 +18,7 @@ COPY . .
 
 EXPOSE 8000
 
-CMD ["python", "main.py"]
+CMD ["python", "app/main.py"]
 
 # Datenbank neu starten
 # docker compose down -v && docker compose up -d
