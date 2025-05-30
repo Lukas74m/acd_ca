@@ -4,7 +4,7 @@ import os
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "mariadb+mariadbconnector://user:password@localhost:3308/exams_db",
+    "mariadb+mariadbconnector://user:password@exams_db:3306/exams_db",
 )
 
 engine = create_engine(

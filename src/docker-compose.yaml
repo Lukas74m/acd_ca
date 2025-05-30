@@ -1,7 +1,7 @@
 services:
   grades_db:
       image: mariadb:latest
-      container_name: grades-db
+      container_name: grades-db-container
       restart: always
       environment:
         MYSQL_ROOT_PASSWORD: rootpassword
@@ -20,7 +20,9 @@ services:
 
   exams_db:
     image: mariadb:latest
-    container_name: exams-db
+    container_name: exams-db-container
+    networks:
+      - app_network
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
@@ -61,6 +63,8 @@ services:
     # depends_on:
     #   exams_db:
     #     condition: service_healthy
+    networks:
+      - app_network
     ports:
       - "8002:8000"
     environment:
@@ -72,3 +76,7 @@ services:
 volumes:
   grades_db_data:
   exams_db_data:
+
+networks:
+  app_network:
+    driver: bridge
