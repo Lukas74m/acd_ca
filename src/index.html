@@ -59,8 +59,8 @@
 
           <div class="tabs">
             <div class="tab active" data-tab="Note">Noten anzeigen</div>
-            <div class="tab" data-tab="Noteliste" id="NotelisteTab">
-              Noteliste
+            <div class="tab" data-tab="NotenListe" id="NotenListeTab">
+              NotenListe
             </div>
             <div class="tab" data-tab="exams">Prüfungen</div>
             <div class="tab hidden" data-tab="create" id="createTab">
@@ -129,27 +129,27 @@
             <div id="NoteTable"></div>
           </div>
 
-          <!-- Noteliste Tab -->
-          <div id="Noteliste" class="tab-content">
-            <h3>Noteliste</h3>
+          <!-- NotenListe Tab -->
+          <div id="NotenListe" class="tab-content">
+            <h3>NotenListe</h3>
             <div class="form-group">
-              <label for="filterNotelistePruefung"
+              <label for="filterNotenListePruefung"
                 >Filter nach Prüfungs-ID:</label
               >
               <input
                 type="number"
-                id="filterNotelistePruefung"
+                id="filterNotenListePruefung"
                 placeholder="Prüfungs-ID eingeben"
               />
               <button
-                id="loadNotelisteBtn"
+                id="loadNotenListeBtn"
                 class="btn"
                 style="margin-top: 10px"
               >
-                Noteliste laden
+                NotenListe laden
               </button>
             </div>
-            <div id="NotelisteTable"></div>
+            <div id="NotenListeTable"></div>
           </div>
 
           <!-- Create Tab (für Professoren) -->
@@ -336,14 +336,14 @@
         document.getElementById("NoteTable").innerHTML = html;
       }
 
-      // Load Noteliste
+      // Load NotenListe
       document
-        .getElementById("loadNotelisteBtn")
+        .getElementById("loadNotenListeBtn")
         .addEventListener("click", async () => {
           const pruefungsId = document.getElementById(
-            "filterNotelistePruefung"
+            "filterNotenListePruefung"
           ).value;
-          let url = `${GRADING_API}/Noteliste/`;
+          let url = `${GRADING_API}/NotenListe/`;
 
           if (pruefungsId) {
             url += `?pruefungs_id=${pruefungsId}`;
@@ -357,8 +357,8 @@
             });
 
             if (response.ok) {
-              const Noteliste = await response.json();
-              displayNoteliste(Noteliste);
+              const NotenListe = await response.json();
+              displayNotenListe(NotenListe);
             } else {
               const error = await response.json();
               alert("Fehler: " + error.detail);
@@ -368,8 +368,8 @@
           }
         });
 
-      // Display Noteliste
-      function displayNoteliste(gradesList) {
+      // Display NotenListe
+      function displayNotenListe(gradesList) {
         let html =
           '<table class="table"><thead><tr><th>Liste-ID</th><th>Prüfungs-ID</th><th>Note-ID</th><th>Modul</th><th>Note</th><th>Datum</th>';
 
@@ -381,7 +381,7 @@
 
         gradesList.forEach((entry) => {
           html += `<tr>
-              <td>${entry.Noteliste_id}</td>
+              <td>${entry.NotenListe_id}</td>
               <td>${entry.pruefungs_id}</td>
               <td>${entry.note_id}</td>
               <td>${entry.note.modul}</td>
@@ -390,7 +390,7 @@
 
           if (currentUser.role === "professor") {
             html += `<td>
-                  <button class="btn btn-danger" onclick="deleteNotelisteEntry(${entry.Noteliste_id})" style="width: auto; padding: 5px 10px;">Löschen</button>
+                  <button class="btn btn-danger" onclick="deleteNotenListeEntry(${entry.NotenListe_id})" style="width: auto; padding: 5px 10px;">Löschen</button>
               </td>`;
           }
 
@@ -398,7 +398,7 @@
         });
 
         html += "</tbody></table>";
-        document.getElementById("NotelisteTable").innerHTML = html;
+        document.getElementById("NotenListeTable").innerHTML = html;
       }
 
       // Create Note
@@ -469,8 +469,8 @@
         }
       }
 
-      // Delete Noteliste Entry
-      async function deleteNotelisteEntry(entryId) {
+      // Delete NotenListe Entry
+      async function deleteNotenListeEntry(entryId) {
         if (
           !confirm("Sind Sie sicher, dass Sie diesen Eintrag löschen möchten?")
         ) {
@@ -478,7 +478,7 @@
         }
 
         try {
-          const response = await fetch(`${GRADING_API}/Noteliste/${entryId}`, {
+          const response = await fetch(`${GRADING_API}/NotenListe/${entryId}`, {
             method: "DELETE",
             headers: {
               Authorization: `Bearer ${currentToken}`,
@@ -487,7 +487,7 @@
 
           if (response.ok) {
             alert("Eintrag erfolgreich gelöscht!");
-            document.getElementById("loadNotelisteBtn").click();
+            document.getElementById("loadNotenListeBtn").click();
           } else {
             const error = await response.json();
             alert("Fehler: " + error.detail);
