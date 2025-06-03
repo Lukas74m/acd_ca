@@ -69,6 +69,7 @@ services:
       dockerfile: "Dockerfile"
     image: "enrollmentimage"
     container_name: enrollment-service
+    restart: always
     networks:
       - app_network
     ports:
