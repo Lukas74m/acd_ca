@@ -144,8 +144,8 @@ def setup_routes(app):
                     )
             query = query.filter(Note.pruefungs_id == pruefungs_id)
 
-        Note = query.offset(skip).limit(limit).all()
-        return Note
+        notes = query.offset(skip).limit(limit).all()
+        return notes
 
     @app.get("/Note/{note_id}", response_model=NoteResponse)
     async def get_note(
