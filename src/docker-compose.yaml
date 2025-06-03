@@ -1,22 +1,26 @@
 services:
   grades_db:
-      image: mariadb:latest
-      container_name: grades-db-container
-      restart: always
-      environment:
-        MYSQL_ROOT_PASSWORD: rootpassword
-        MYSQL_DATABASE: grades_db
-        MYSQL_USER: user
-        MYSQL_PASSWORD: password
-      ports:
-        - "3307:3306"
-      volumes:
-        - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-        - grades_db_data:/var/lib/mysql
-      healthcheck:
-        test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-        timeout: 20s
-        retries: 10
+    image: mariadb:latest
+    container_name: grades-db-container
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: grades_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - grades_db_data:/var/lib/mysql
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
+      timeout: 5s
+      retries: 5
+      interval: 10s
 
   exams_db:
     image: mariadb:latest
@@ -32,12 +36,14 @@ services:
     ports:
       - "3308:3306"
     volumes:
-      - ./init_exams.sql:/docker-entrypoint-initdb.d/init_exams.sql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
       - exams_db_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 10
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
+      timeout: 5s
+      retries: 5
+      interval: 10s
 
   grading-service:
     build:
@@ -46,13 +52,19 @@ services:
     image: "gradingimage"
     container_name: grading-service
     restart: always
+    depends_on:
+      grades_db:
+        condition: service_healthy
+    networks:
+      - app_network
     environment:
+      DATABASE_URL: mariadb+mariadbconnector://user:password@grades_db:3306/grades_db
       MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: grades_db
       MYSQL_USER: user
       MYSQL_PASSWORD: password
     ports:
-      - "8001:8000"
+      - "8001:8001"
 
   enrollment_service:
     build:
@@ -60,14 +72,15 @@ services:
       dockerfile: "Dockerfile"
     image: "enrollmentimage"
     container_name: enrollment-service
-    # depends_on:
-    #   exams_db:
-    #     condition: service_healthy
+    depends_on:
+      exams_db:
+        condition: service_healthy
     networks:
       - app_network
     ports:
-      - "8002:8000"
+      - "8002:8002"
     environment:
+      DATABASE_URL: mariadb+mariadbconnector://user:password@exams_db:3306/exams_db
       MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: exams_db
       MYSQL_USER: user

@@ -10,9 +10,7 @@ Base = declarative_base()
 class Exam(Base):
     __tablename__ = "Exam"
 
-    pruefungs_id = Column(Integer, primary_key=True, nullable=False)
-    # grades_list_id = 
-    # participants_list_id = 
+    pruefungs_id = Column(Integer, primary_key=True, autoincrement=True)
     prof_name = Column(String(255), nullable=False)
     ects = Column(Integer, nullable=False)
     datum = Column(Date, nullable=False)
@@ -20,19 +18,14 @@ class Exam(Base):
 
 
 class ExamCreate(BaseModel):
-    # grades_list_id 
-    # participants_list_id  
     prof_name: str
     ects: int
     datum: date
     modul: str
 
 
-
 class ExamResponse(BaseModel):
     pruefungs_id: int
-    # grades_list_id 
-    # participants_list_id  
     prof_name: str
     ects: int
     datum: date

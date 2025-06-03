@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Note-Microservice</title>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Note-Microservice</h1>
+        <p>Universitäts-Noteverwaltungssystem</p>
+      </div>
+
+      <div class="content">
+        <!-- Login Form -->
+        <div id="loginSection">
+          <div class="login-form">
+            <h2 style="text-align: center; margin-bottom: 30px">Anmeldung</h2>
+            <form id="loginForm">
+              <div class="form-group">
+                <label for="username">Benutzername:</label>
+                <input type="text" id="username" name="username" required />
+              </div>
+              <div class="form-group">
+                <label for="password">Passwort:</label>
+                <input type="password" id="password" name="password" required />
+              </div>
+              <button type="submit" class="btn">Anmelden</button>
+              <div id="loginError" class="error"></div>
+            </form>
+
+            <div style="text-align: center; margin-top: 30px">
+              <p>Testbenutzer:</p>
+              <small style="color: #718096">
+                Professor: prof.mueller / password123<br />
+                Student: student.max / password123<br />
+                Student: student.anna / password123
+              </small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Dashboard -->
+        <div id="dashboardSection" class="hidden">
+          <div class="user-info">
+            <div>
+              <strong id="currentUser"></strong> -
+              <span id="currentRole"></span>
+            </div>
+            <button
+              id="logoutBtn"
+              class="btn btn-secondary"
+              style="width: auto"
+            >
+              Abmelden
+            </button>
+          </div>
+
+          <div class="tabs">
+            <div class="tab active" data-tab="Note">Noten anzeigen</div>
+            <div class="tab" data-tab="Noteliste" id="NotelisteTab">
+              Noteliste
+            </div>
+            <div class="tab" data-tab="exams">Prüfungen</div>
+            <div class="tab hidden" data-tab="create" id="createTab">
+              Note erstellen
+            </div>
+            <div class="tab hidden" data-tab="createExam" id="createExamTab">
+              Prüfung erstellen
+            </div>
+          </div>
+
+          <div id="exams" class="tab-content">
+            <h3>Prüfungen</h3>
+            <div class="form-group">
+              <label for="filterExamModul">Filter nach Modul:</label>
+              <input
+                type="text"
+                id="filterExamModul"
+                placeholder="Modul eingeben"
+              />
+              <button id="loadExamsBtn" class="btn" style="margin-top: 10px">
+                Prüfungen laden
+              </button>
+            </div>
+            <div id="examsTable"></div>
+          </div>
+
+          <div id="createExam" class="tab-content">
+            <h3>Neue Prüfung erstellen</h3>
+            <form id="createExamForm">
+              <div class="form-group">
+                <label for="newProfName">Professor:</label>
+                <input type="text" id="newProfName" required />
+              </div>
+              <div class="form-group">
+                <label for="newEcts">ECTS:</label>
+                <input type="number" id="newEcts" min="1" max="30" required />
+              </div>
+              <div class="form-group">
+                <label for="newExamDatum">Prüfungsdatum:</label>
+                <input type="date" id="newExamDatum" required />
+              </div>
+              <div class="form-group">
+                <label for="newExamModul">Modul:</label>
+                <input type="text" id="newExamModul" required />
+              </div>
+              <button type="submit" class="btn">Prüfung erstellen</button>
+              <div id="createExamError" class="error"></div>
+              <div id="createExamSuccess" class="success"></div>
+            </form>
+          </div>
+
+          <!-- Note Tab -->
+          <div id="Note" class="tab-content active">
+            <h3>Note</h3>
+            <div class="form-group">
+              <label for="filterPruefung">Filter nach Prüfungs-ID:</label>
+              <input
+                type="number"
+                id="filterPruefung"
+                placeholder="Prüfungs-ID eingeben"
+              />
+              <button id="loadNoteBtn" class="btn" style="margin-top: 10px">
+                Note laden
+              </button>
+            </div>
+            <div id="NoteTable"></div>
+          </div>
+
+          <!-- Noteliste Tab -->
+          <div id="Noteliste" class="tab-content">
+            <h3>Noteliste</h3>
+            <div class="form-group">
+              <label for="filterNotelistePruefung"
+                >Filter nach Prüfungs-ID:</label
+              >
+              <input
+                type="number"
+                id="filterNotelistePruefung"
+                placeholder="Prüfungs-ID eingeben"
+              />
+              <button
+                id="loadNotelisteBtn"
+                class="btn"
+                style="margin-top: 10px"
+              >
+                Noteliste laden
+              </button>
+            </div>
+            <div id="NotelisteTable"></div>
+          </div>
+
+          <!-- Create Tab (für Professoren) -->
+          <div id="create" class="tab-content">
+            <h3>Neue Note erstellen</h3>
+            <form id="createNoteForm">
+              <div class="form-group">
+                <label for="newPruefungsId">Prüfungs-ID:</label>
+                <input type="number" id="newPruefungsId" required />
+              </div>
+              <div class="form-group">
+                <label for="newDatum">Prüfungsdatum:</label>
+                <input type="date" id="newDatum" required />
+              </div>
+              <div class="form-group">
+                <label for="newModul">Modul:</label>
+                <input type="text" id="newModul" required />
+              </div>
+              <div class="form-group">
+                <label for="newNote">Note:</label>
+                <select id="newNote" required>
+                  <option value="">Bitte wählen...</option>
+                  <option value="1.0">1.0</option>
+                  <option value="1.3">1.3</option>
+                  <option value="1.7">1.7</option>
+                  <option value="2.0">2.0</option>
+                  <option value="2.3">2.3</option>
+                  <option value="2.7">2.7</option>
+                  <option value="3.0">3.0</option>
+                  <option value="3.3">3.3</option>
+                  <option value="3.7">3.7</option>
+                  <option value="4.0">4.0</option>
+                  <option value="5.0">5.0</option>
+                </select>
+              </div>
+              <button type="submit" class="btn">Note erstellen</button>
+              <div id="createError" class="error"></div>
+              <div id="createSuccess" class="success"></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const GRADING_API = "http://localhost:8001";
+      const ENROLLMENT_API = "http://localhost:8002";
+      let currentToken = null;
+      let currentUser = null;
+
+      // Login
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const username = document.getElementById("username").value;
+          const password = document.getElementById("password").value;
+
+          try {
+            const response = await fetch(`${GRADING_API}/login`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ username, password }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+              currentToken = data.session_token;
+              currentUser = data.user;
+              showDashboard();
+            } else {
+              document.getElementById("loginError").textContent =
+                data.detail || "Anmeldung fehlgeschlagen";
+            }
+          } catch (error) {
+            document.getElementById("loginError").textContent =
+              "Verbindungsfehler: " + error.message;
+          }
+        });
+
+      // Show dashboard
+      function showDashboard() {
+        document.getElementById("currentUser").textContent =
+          currentUser.username;
+        document.getElementById("currentRole").textContent = currentUser.role;
+
+        // Show professor-only tabs (funzt noch nicht)
+        if (currentUser.role === "professor") {
+          document.getElementById("createTab").classList.remove("hidden");
+          document.getElementById("createExamTab").classList.remove("hidden");
+        }
+
+        document.getElementById("loginSection").classList.add("hidden");
+        document.getElementById("dashboardSection").classList.remove("hidden");
+      }
+
+      // Logout
+      document.getElementById("logoutBtn").addEventListener("click", () => {
+        currentToken = null;
+        currentUser = null;
+        document.getElementById("loginSection").classList.remove("hidden");
+        document.getElementById("dashboardSection").classList.add("hidden");
+        document.getElementById("loginForm").reset();
+        document.getElementById("loginError").textContent = "";
+      });
+
+      // Tab switching (in Bearbeitung, funzt noch nicht)
+      document.querySelectorAll(".tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          document
+            .querySelectorAll(".tab")
+            .forEach((t) => t.classList.remove("active"));
+          document
+            .querySelectorAll(".tab-content")
+            .forEach((c) => c.classList.remove("active"));
+
+          tab.classList.add("active");
+          document.getElementById(tab.dataset.tab).classList.add("active");
+        });
+      });
+
+      // Load Note
+      document
+        .getElementById("loadNoteBtn")
+        .addEventListener("click", async () => {
+          const pruefungsId = document.getElementById("filterPruefung").value;
+          let url = `${GRADING_API}/Note/`;
+
+          if (pruefungsId) {
+            url += `?pruefungs_id=${pruefungsId}`;
+          }
+
+          try {
+            const response = await fetch(url, {
+              headers: {
+                Authorization: `Bearer ${currentToken}`,
+              },
+            });
+
+            if (response.ok) {
+              const Note = await response.json();
+              displayNote(Note);
+            } else {
+              const error = await response.json();
+              alert("Fehler: " + error.detail);
+            }
+          } catch (error) {
+            alert("Verbindungsfehler: " + error.message);
+          }
+        });
+
+      // Display Note
+      function displayNote(grades) {
+        let html =
+          '<table class="table"><thead><tr><th>ID</th><th>Prüfungs-ID</th><th>Datum</th><th>Modul</th><th>Note</th>';
+
+        if (currentUser.role === "professor") {
+          html += "<th>Aktionen</th>";
+        }
+
+        html += "</tr></thead><tbody>";
+
+        grades.forEach((note) => {
+          html += `<tr>
+              <td>${note.note_id}</td>
+              <td>${note.pruefungs_id}</td>
+              <td>${note.datum}</td>
+              <td>${note.modul}</td>
+              <td>${note.note}</td>`;
+
+          if (currentUser.role === "professor") {
+            html += `<td>
+                  <button class="btn btn-danger" onclick="deleteNote(${note.note_id})" style="width: auto; padding: 5px 10px;">Löschen</button>
+              </td>`;
+          }
+
+          html += "</tr>";
+        });
+
+        html += "</tbody></table>";
+        document.getElementById("NoteTable").innerHTML = html;
+      }
+
+      // Load Noteliste
+      document
+        .getElementById("loadNotelisteBtn")
+        .addEventListener("click", async () => {
+          const pruefungsId = document.getElementById(
+            "filterNotelistePruefung"
+          ).value;
+          let url = `${GRADING_API}/Noteliste/`;
+
+          if (pruefungsId) {
+            url += `?pruefungs_id=${pruefungsId}`;
+          }
+
+          try {
+            const response = await fetch(url, {
+              headers: {
+                Authorization: `Bearer ${currentToken}`,
+              },
+            });
+
+            if (response.ok) {
+              const Noteliste = await response.json();
+              displayNoteliste(Noteliste);
+            } else {
+              const error = await response.json();
+              alert("Fehler: " + error.detail);
+            }
+          } catch (error) {
+            alert("Verbindungsfehler: " + error.message);
+          }
+        });
+
+      // Display Noteliste
+      function displayNoteliste(gradesList) {
+        let html =
+          '<table class="table"><thead><tr><th>Liste-ID</th><th>Prüfungs-ID</th><th>Note-ID</th><th>Modul</th><th>Note</th><th>Datum</th>';
+
+        if (currentUser.role === "professor") {
+          html += "<th>Aktionen</th>";
+        }
+
+        html += "</tr></thead><tbody>";
+
+        gradesList.forEach((entry) => {
+          html += `<tr>
+              <td>${entry.Noteliste_id}</td>
+              <td>${entry.pruefungs_id}</td>
+              <td>${entry.note_id}</td>
+              <td>${entry.note.modul}</td>
+              <td>${entry.note.note}</td>
+              <td>${entry.note.datum}</td>`;
+
+          if (currentUser.role === "professor") {
+            html += `<td>
+                  <button class="btn btn-danger" onclick="deleteNotelisteEntry(${entry.Noteliste_id})" style="width: auto; padding: 5px 10px;">Löschen</button>
+              </td>`;
+          }
+
+          html += "</tr>";
+        });
+
+        html += "</tbody></table>";
+        document.getElementById("NotelisteTable").innerHTML = html;
+      }
+
+      // Create Note
+      document
+        .getElementById("createNoteForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const noteData = {
+            pruefungs_id: parseInt(
+              document.getElementById("newPruefungsId").value
+            ),
+            datum: document.getElementById("newDatum").value,
+            modul: document.getElementById("newModul").value,
+            note: document.getElementById("newNote").value,
+          };
+
+          try {
+            const response = await fetch(`${GRADING_API}/Note/`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${currentToken}`,
+              },
+              body: JSON.stringify(noteData),
+            });
+
+            if (response.ok) {
+              document.getElementById("createSuccess").textContent =
+                "Note erfolgreich erstellt!";
+              document.getElementById("createError").textContent = "";
+              document.getElementById("createNoteForm").reset();
+            } else {
+              const error = await response.json();
+              document.getElementById("createError").textContent = error.detail;
+              document.getElementById("createSuccess").textContent = "";
+            }
+          } catch (error) {
+            document.getElementById("createError").textContent =
+              "Verbindungsfehler: " + error.message;
+            document.getElementById("createSuccess").textContent = "";
+          }
+        });
+
+      // Delete Note (Professor only)
+      async function deleteNote(noteId) {
+        if (!confirm("Sind Sie sicher, dass Sie diese Note löschen möchten?")) {
+          return;
+        }
+
+        try {
+          const response = await fetch(`${GRADING_API}/Note/${noteId}`, {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${currentToken}`,
+            },
+          });
+
+          if (response.ok) {
+            alert("Note erfolgreich gelöscht!");
+            document.getElementById("loadNoteBtn").click();
+          } else {
+            const error = await response.json();
+            alert("Fehler: " + error.detail);
+          }
+        } catch (error) {
+          alert("Verbindungsfehler: " + error.message);
+        }
+      }
+
+      // Delete Noteliste Entry
+      async function deleteNotelisteEntry(entryId) {
+        if (
+          !confirm("Sind Sie sicher, dass Sie diesen Eintrag löschen möchten?")
+        ) {
+          return;
+        }
+
+        try {
+          const response = await fetch(`${GRADING_API}/Noteliste/${entryId}`, {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${currentToken}`,
+            },
+          });
+
+          if (response.ok) {
+            alert("Eintrag erfolgreich gelöscht!");
+            document.getElementById("loadNotelisteBtn").click();
+          } else {
+            const error = await response.json();
+            alert("Fehler: " + error.detail);
+          }
+        } catch (error) {
+          alert("Verbindungsfehler: " + error.message);
+        }
+      }
+
+      //Display Exams
+      function displayExams(exams) {
+        let html =
+          '<table class="table"><thead><tr><th>ID</th><th>Professor</th><th>ECTS</th><th>Datum</th><th>Modul</th>';
+
+        if (currentUser && currentUser.role === "professor") {
+          html += "<th>Aktionen</th>";
+        }
+
+        html += "</tr></thead><tbody>";
+
+        exams.forEach((exam) => {
+          html += `<tr>
+                    <td>${exam.pruefungs_id}</td>
+                    <td>${exam.prof_name}</td>
+                    <td>${exam.ects}</td>
+                    <td>${exam.datum}</td>
+                    <td>${exam.modul}</td>`;
+
+          if (currentUser && currentUser.role === "professor") {
+            html += `<td>
+                        <button class="btn btn-danger" onclick="deleteExam(${exam.pruefungs_id})" style="width: auto; padding: 5px 10px;">Löschen</button>
+                    </td>`;
+          }
+
+          html += "</tr>";
+        });
+
+        html += "</tbody></table>";
+        document.getElementById("examsTable").innerHTML = html;
+      }
+
+      // Create Exam
+      document
+        .getElementById("createExamForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const examData = {
+            prof_name: document.getElementById("newProfName").value,
+            ects: parseInt(document.getElementById("newEcts").value),
+            datum: document.getElementById("newExamDatum").value,
+            modul: document.getElementById("newExamModul").value,
+          };
+
+          try {
+            const response = await fetch(`${ENROLLMENT_API}/exams/`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(examData),
+            });
+
+            if (response.ok) {
+              document.getElementById("createExamSuccess").textContent =
+                "Prüfung erfolgreich erstellt!";
+              document.getElementById("createExamError").textContent = "";
+              document.getElementById("createExamForm").reset();
+            } else {
+              const error = await response.json();
+              document.getElementById("createExamError").textContent =
+                error.detail;
+              document.getElementById("createExamSuccess").textContent = "";
+            }
+          } catch (error) {
+            document.getElementById("createExamError").textContent =
+              "Verbindungsfehler: " + error.message;
+            document.getElementById("createExamSuccess").textContent = "";
+          }
+        });
+    </script>
+  </body>
+</html>

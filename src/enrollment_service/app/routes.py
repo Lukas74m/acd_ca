@@ -19,7 +19,6 @@ def setup_routes(app):
     @app.post("/exams/", response_model=ExamResponse)
     async def create_exam(exam: ExamCreate, db: Session = Depends(get_db)):
         db_exam = Exam(
-            matrikelnummer=exam.matrikelnummer,
             prof_name=exam.prof_name,
             ects=exam.ects,
             datum=exam.datum,

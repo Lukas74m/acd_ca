@@ -16,7 +16,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-EXPOSE 8000
+EXPOSE 8001
 
 CMD ["python", "app/main.py"]
 
@@ -26,5 +26,5 @@ CMD ["python", "app/main.py"]
 # Service starten
 # python main.py
 
-# Alle Noten abrufen
+# Alle Note abrufen
 # curl http://localhost:8000/notes/
