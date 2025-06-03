@@ -16,9 +16,9 @@ services:
     networks:
       - app_network
     healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
-      start_period: 10s
-      timeout: 5s
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      start_period: 30s
+      timeout: 10s
       retries: 5
       interval: 10s
 
@@ -39,9 +39,9 @@ services:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
       - exams_db_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
-      start_period: 10s
-      timeout: 5s
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      start_period: 30s
+      timeout: 10s
       retries: 5
       interval: 10s
 
