@@ -4,12 +4,8 @@ from typing import List, Optional
 from database import get_db
 from orm import (
     Note,
-    NotenListe,
     NoteCreate,
     NoteResponse,
-    NotenListeCreate,
-    NotenListeResponse,
-    NotenListeWithNote,
 )
 from auth import (
     User,
@@ -208,87 +204,3 @@ def setup_routes(app):
         db.commit()
         return {"message": "Note deleted successfully"}
 
-    @app.post("/NotenListe/", response_model=NotenListeResponse)
-    async def create_NotenListe_entry(
-        entry: NotenListeCreate,
-        db: Session = Depends(get_db),
-        token: str = Depends(get_session_token),
-    ):
-        current_user = get_current_user(token, db)
-        require_professor(current_user)
-
-        # Check if note exists
-        note = db.query(Note).filter(Note.note_id == entry.note_id).first()
-        if not note:
-            raise HTTPException(status_code=404, detail="Note not found")
-
-        db_entry = NotenListe(pruefungs_id=entry.pruefungs_id, note_id=entry.note_id)
-        db.add(db_entry)
-        db.commit()
-        db.refresh(db_entry)
-        return db_entry
-
-    @app.get("/NotenListe/", response_model=List[NotenListeWithNote])
-    async def get_NotenListe(
-        pruefungs_id: Optional[int] = Query(None),
-        skip: int = 0,
-        limit: int = 100,
-        db: Session = Depends(get_db),
-        token: str = Depends(get_session_token),
-    ):
-        current_user = get_current_user(token, db)
-        require_student_or_professor(current_user)
-
-        query = db.query(NotenListe)
-
-        if current_user.role == UserRole.student:
-            allowed_ids = get_allowed_pruefungs_ids(current_user)
-            if not allowed_ids:
-                return []
-            query = query.filter(NotenListe.pruefungs_id.in_(allowed_ids))
-
-        if pruefungs_id:
-            if current_user.role == UserRole.student:
-                if not check_student_access(current_user, pruefungs_id):
-                    raise HTTPException(
-                        status_code=status.HTTP_403_FORBIDDEN,
-                        detail="Access denied for this exam",
-                    )
-            query = query.filter(NotenListe.pruefungs_id == pruefungs_id)
-
-        entries = query.offset(skip).limit(limit).all()
-
-        result = []
-        for entry in entries:
-            note = db.query(Note).filter(Note.note_id == entry.note_id).first()
-            result.append(
-                {
-                    "NotenListe_id": entry.NotenListe_id,
-                    "pruefungs_id": entry.pruefungs_id,
-                    "note_id": entry.note_id,
-                    "note": note,
-                }
-            )
-
-        return result
-
-    @app.delete("/NotenListe/{NotenListe_id}")
-    async def delete_NotenListe_entry(
-        NotenListe_id: int,
-        db: Session = Depends(get_db),
-        token: str = Depends(get_session_token),
-    ):
-        current_user = get_current_user(token, db)
-        require_professor(current_user)
-
-        entry = (
-            db.query(NotenListe)
-            .filter(NotenListe.NotenListe_id == NotenListe_id)
-            .first()
-        )
-        if entry is None:
-            raise HTTPException(status_code=404, detail="NotenListe entry not found")
-
-        db.delete(entry)
-        db.commit()
-        return {"message": "NotenListe entry deleted successfully"}

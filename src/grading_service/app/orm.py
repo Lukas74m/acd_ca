@@ -16,17 +16,17 @@ class Note(Base):
     modul = Column(String(255), nullable=False)
     note = Column(String(5), nullable=False)
 
-    NotenListen = relationship("NotenListe", back_populates="note")
+    #NotenListen = relationship("NotenListe", back_populates="note")
 
 
-class NotenListe(Base):
-    __tablename__ = "NotenListe"
+# class NotenListe(Base):
+#     __tablename__ = "NotenListe"
 
-    NotenListe_id = Column(Integer, primary_key=True, index=True)
-    pruefungs_id = Column(Integer, nullable=False)
-    note_id = Column(Integer, ForeignKey("Note.note_id"), nullable=False)
+#     NotenListe_id = Column(Integer, primary_key=True, index=True)
+#     pruefungs_id = Column(Integer, nullable=False)
+#     note_id = Column(Integer, ForeignKey("Note.note_id"), nullable=False)
 
-    note = relationship("Note", back_populates="NotenListen")
+#     note = relationship("Note", back_populates="NotenListen")
 
 
 class NoteCreate(BaseModel):
@@ -47,25 +47,3 @@ class NoteResponse(BaseModel):
         from_attributes = True
 
 
-class NotenListeCreate(BaseModel):
-    pruefungs_id: int
-    note_id: int
-
-
-class NotenListeResponse(BaseModel):
-    NotenListe_id: int
-    pruefungs_id: int
-    note_id: int
-
-    class Config:
-        from_attributes = True
-
-
-class NotenListeWithNote(BaseModel):
-    NotenListe_id: int
-    pruefungs_id: int
-    note_id: int
-    note: NoteResponse
-
-    class Config:
-        from_attributes = True
