@@ -55,3 +55,20 @@ def setup_routes(app):
         db.delete(exam)
         db.commit()
         return {"message": "Exam deleted successfully"}
+
+    @app.put("/exams/{exam_id}", response_model=ExamResponse)
+    async def update_exam(
+        exam_id: int, exam_update: ExamCreate, db: Session = Depends(get_db)
+    ):
+        db_exam = db.query(Exam).filter(Exam.pruefungs_id == exam_id).first()
+        if db_exam is None:
+            raise HTTPException(status_code=404, detail="Exam not found")
+
+        setattr(db_exam, "prof_name", exam_update.prof_name)
+        setattr(db_exam, "ects", exam_update.ects)
+        setattr(db_exam, "datum", exam_update.datum)
+        setattr(db_exam, "modul", exam_update.modul)
+
+        db.commit()
+        db.refresh(db_exam)
+        return db_exam
