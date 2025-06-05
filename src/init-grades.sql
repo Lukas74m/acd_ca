@@ -30,18 +30,4 @@ INSERT INTO users (username, email, password, role) VALUES
 ('student.max', 'max@student.de', 'password123', 'student'),
 ('student.anna', 'anna@student.de', 'password123', 'student');
 
-CREATE TABLE IF NOT EXISTS NotenListe (
-    NotenListe_id INT AUTO_INCREMENT PRIMARY KEY,
-    pruefungs_id INT NOT NULL,
-    note_id INT NOT NULL,
-    FOREIGN KEY (note_id) REFERENCES Note(note_id) ON DELETE CASCADE
-);
-
-INSERT INTO NotenListe (pruefungs_id, note_id) VALUES
-(1, 1),
-(1, 2), 
-(1, 3),
-(2, 4),
-(2, 5),
-(3, 6);
 

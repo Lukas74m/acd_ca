@@ -245,10 +245,14 @@
             </button>
           </div>
 
+          <!-- Unterschiedliche Tabs im Main Menü -->
           <div class="tabs">
             <div class="tab active" data-tab="Note">Noten anzeigen</div>
             <div class="tab" data-tab="NotenListe" id="NotenListeTab">
               NotenListe
+            </div>
+            <div class="tab" data-tab="TeilnehmerListe" id="TeilnehmerListeTab">
+              TeilnehmerListe
             </div>
             <div class="tab" data-tab="exams">Prüfungen</div>
             <div class="tab hidden" data-tab="create" id="createTab">
@@ -259,6 +263,7 @@
             </div>
           </div>
 
+          <!-- Prüfungen Tab  -->
           <div id="exams" class="tab-content">
             <h3>Prüfungen</h3>
             <div class="form-group">
@@ -273,6 +278,7 @@
             <div id="examsTable"></div>
           </div>
 
+          <!-- Prüfungen erstellen Tab  -->
           <div id="createExam" class="tab-content">
             <h3>Neue Prüfung erstellen</h3>
             <form id="createExamForm">
@@ -298,7 +304,7 @@
             </form>
           </div>
 
-          <!-- Note Tab -->
+          <!-- Note anzeigen Tab -->
           <div id="Note" class="tab-content active">
             <h3>Note</h3>
             <div class="form-group">
@@ -338,7 +344,30 @@
             <div id="NotenListeTable"></div>
           </div>
 
-          <!-- Create Tab (für Professoren) -->
+          <!-- TeilnehmerListe Tab -->
+          <div id="TeilnehmerListe" class="tab-content">
+            <h3>TeilnehmerListe</h3>
+            <div class="form-group">
+              <label for="filterTeilnehmerListePruefung"
+                >Filter nach Prüfungs-ID:</label
+              >
+              <input
+                type="number"
+                id="filterTeilnehmerListePruefung"
+                placeholder="Prüfungs-ID eingeben"
+              />
+              <button
+                id="loadTeilnehmerListeBtn"
+                class="btn"
+                style="margin-top: 10px"
+              >
+                TeilnehmerListe laden
+              </button>
+            </div>
+            <div id="TeilnehmerListeTable"></div>
+          </div>
+
+          <!-- Note erstellen Tab (für Professoren) -->
           <div id="create" class="tab-content">
             <h3>Neue Note erstellen</h3>
             <form id="createNoteForm">
@@ -430,6 +459,10 @@
         if (currentUser.role === "professor") {
           document.getElementById("createTab").classList.remove("hidden");
           document.getElementById("createExamTab").classList.remove("hidden");
+          document
+            .getElementById("TeilnehmerListeTab")
+            .classList.remove("hidden");
+          document.getElementById("NotenListeTab").classList.remove("hidden");
         }
 
         document.getElementById("loginSection").classList.add("hidden");
@@ -652,18 +685,14 @@
           const pruefungsId = document.getElementById(
             "filterNotenListePruefung"
           ).value;
-          let url = `${GRADING_API}/NotenListe/`;
+          let url = `${ENROLLMENT_API}/NotenListe/`;
 
           if (pruefungsId) {
             url += `?pruefungs_id=${pruefungsId}`;
           }
 
           try {
-            const response = await fetch(url, {
-              headers: {
-                Authorization: `Bearer ${currentToken}`,
-              },
-            });
+            const response = await fetch(url);
 
             if (response.ok) {
               const NotenListe = await response.json();
@@ -695,6 +724,57 @@
 
         html += "</tbody></table>";
         document.getElementById("NotenListeTable").innerHTML = html;
+      }
+
+      // Load Teilnehmerliste
+      document
+        .getElementById("loadTeilnehmerListeBtn")
+        .addEventListener("click", async () => {
+          const pruefungsId = document.getElementById(
+            "filterTeilnehmerListePruefung"
+          ).value;
+          let url = `${ENROLLMENT_API}/TeilnehmerListe/`;
+
+          if (pruefungsId) {
+            url += `?pruefungs_id=${pruefungsId}`;
+          }
+
+          try {
+            const response = await fetch(url);
+
+            if (response.ok) {
+              const TeilnehmerListe = await response.json();
+              displayTeilnehmerListe(TeilnehmerListe);
+            } else {
+              const error = await response.json();
+              alert("Fehler: " + error.detail);
+            }
+          } catch (error) {
+            alert("Verbindungsfehler: " + error.message);
+          }
+        });
+
+      // Display TeilnehmerListe
+      function displayTeilnehmerListe(teilnehmerListe) {
+        let html =
+          '<table class="table"><thead><tr><th>TeilnehmerListe_id</th><th>Prüfungs-ID</th><th>Matrikelnummer</th><th>Modul</th><th>Professor</th><th>Datum</th>';
+
+        html += "</tr></thead><tbody>";
+
+        teilnehmerListe.forEach((entry) => {
+          html += `<tr>
+            <td>${entry.TeilnehmerListe_id}</td>
+            <td>${entry.pruefungs_id}</td>
+            <td>${entry.matrikelnummer}</td>
+            <td>${entry.exam.modul}</td>
+            <td>${entry.exam.prof_name}</td>
+            <td>${entry.exam.datum}</td>`;
+
+          html += "</tr>";
+        });
+
+        html += "</tbody></table>";
+        document.getElementById("TeilnehmerListeTable").innerHTML = html;
       }
 
       // Create Note
