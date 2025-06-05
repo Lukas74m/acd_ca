@@ -459,6 +459,8 @@
         if (currentUser.role === "professor") {
           document.getElementById("createTab").classList.remove("hidden");
           document.getElementById("createExamTab").classList.remove("hidden");
+          document.getElementById("TeilnehmerListeTab").classList.remove("hidden");
+          document.getElementById("NotenListeTab").classList.remove("hidden");
         }
 
         document.getElementById("loginSection").classList.add("hidden");
@@ -655,7 +657,12 @@
         gradesList.forEach((entry) => {
           html += `<tr>
               <td>${entry.NotenListe_id}</td>
-              <td>${entry.pruefungs_id}</td>`;
+              <td>${entry.pruefungs_id}</td>
+              <td>${entry.note_id}</td>
+              <td>${entry.modul}</td>
+              <td>${entry.note}</td>
+              <td>${entry.datum}</td>
+              `;
 
           // if (currentUser.role === "professor") {
           //   html += `<td>

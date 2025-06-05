@@ -63,7 +63,7 @@ services:
     ports:
       - "127.0.0.1:8001:8001"
 
-  enrollment_service:
+  enrollment-service:
     build:
       context: "./enrollment_service"
       dockerfile: "Dockerfile"

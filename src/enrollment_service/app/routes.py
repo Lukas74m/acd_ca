@@ -2,6 +2,7 @@ from fastapi import HTTPException, Depends, Query, status, Header
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from database import get_db
+import httpx
 from orm import (
     Exam,
     TeilnehmerListe,
@@ -33,6 +34,21 @@ from orm import (
 #     get_allowed_pruefungs_ids,
 #     UserRole,
 # )
+
+async def get_note_from_grading_service(note_id: int, token: str) -> Optional[dict]:
+    """Hole Note vom Grading-Service"""
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(
+                f"http://grading-service:8001/Note/{note_id}",
+                #headers={"Authorization": f"Bearer {token}"}
+            )
+            if response.status_code == 200:
+                return response.json()
+            return None
+        except Exception as e:
+            print(f"Error fetching note: {e}")
+            return None
 
 def get_session_token(authorization: str = Header(None)):
     """Extrahiert Session-Token aus Authorization-Header"""
@@ -159,13 +175,15 @@ def setup_routes(app):
             )
 
         return result
+    
+
     @app.post("/NotenListe/", response_model=NotenListeResponse)
     async def create_NotenListe_entry(
         entry: NotenListeCreate,
         db: Session = Depends(get_db),
         token: str = Depends(get_session_token),
     ):
-        # Prüfen, ob Note existiert – in getrennter Datenbank!
+
         #note = note_db.query(Note).filter(Note.note_id == entry.note_id).first()
         #if not note:
         #    raise HTTPException(status_code=404, detail="Note not found")
@@ -192,12 +210,13 @@ def setup_routes(app):
 
         result = []
         for entry in entries:
-            #note = note_db.query(Note).filter(Note.note_id == entry.note_id).first()
+            # Note vom anderen Service holen
+            note_data = await get_note_from_grading_service(entry.note_id, token)
             result.append({
                 "NotenListe_id": entry.NotenListe_id,
                 "pruefungs_id": entry.pruefungs_id,
                 "note_id": entry.note_id,
-                #"note": note,
+                "note": note_data,
             })
 
         return result
