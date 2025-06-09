@@ -692,7 +692,11 @@
           }
 
           try {
-            const response = await fetch(url);
+            const response = await fetch(url, {
+              headers: {
+                Authorization: `Bearer ${currentToken}`,
+              },
+            });
 
             if (response.ok) {
               const NotenListe = await response.json();
@@ -713,13 +717,13 @@
 
         gradesList.forEach((entry) => {
           html += `<tr>
-      <td>${entry.NotenListe_id}</td>
-      <td>${entry.pruefungs_id}</td>
-      <td>${entry.note_id}</td>
-      <td>${entry.modul}</td>
-      <td>${entry.note}</td>
-      <td>${entry.datum}</td>
-    </tr>`;
+            <td>${entry.NotenListe_id}</td>
+            <td>${entry.pruefungs_id}</td>
+            <td>${entry.note_id}</td>
+            <td>${entry.note?.modul || "-"}</td>
+            <td>${entry.note?.note || "-"}</td>
+            <td>${entry.note?.datum || "-"}</td>
+          </tr>`;
         });
 
         html += "</tbody></table>";

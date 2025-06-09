@@ -42,7 +42,7 @@ async def get_note_from_grading_service(note_id: int, token: str) -> Optional[di
         try:
             response = await client.get(
                 f"http://grading-service:8001/Note/{note_id}",
-                # headers={"Authorization": f"Bearer {token}"}
+                headers={"Authorization": f"Bearer {token}"},
             )
             if response.status_code == 200:
                 return response.json()
