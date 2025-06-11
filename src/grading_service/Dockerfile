@@ -23,8 +23,5 @@ CMD ["python", "app/main.py"]
 # Datenbank neu starten
 # docker compose down -v && docker compose up -d
 
-# Service starten
-# python main.py
-
-# Alle Note abrufen
+# Alle Noten abrufen
 # curl http://localhost:8000/notes/
