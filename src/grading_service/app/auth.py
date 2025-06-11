@@ -114,7 +114,7 @@ def logout_user(token: str):
     return False
 
 
-def get_current_user(token: str = None, db: Session = Depends(get_db)):
+def get_current_user(token: str = "", db: Session = Depends(get_db)):
     if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="No session token provided"

@@ -245,10 +245,14 @@
             </button>
           </div>
 
+          <!-- Unterschiedliche Tabs im Main Menü -->
           <div class="tabs">
             <div class="tab active" data-tab="Note">Noten anzeigen</div>
             <div class="tab" data-tab="NotenListe" id="NotenListeTab">
               NotenListe
+            </div>
+            <div class="tab" data-tab="TeilnehmerListe" id="TeilnehmerListeTab">
+              TeilnehmerListe
             </div>
             <div class="tab" data-tab="exams">Prüfungen</div>
             <div class="tab hidden" data-tab="create" id="createTab">
@@ -259,6 +263,7 @@
             </div>
           </div>
 
+          <!-- Prüfungen Tab  -->
           <div id="exams" class="tab-content">
             <h3>Prüfungen</h3>
             <div class="form-group">
@@ -273,6 +278,7 @@
             <div id="examsTable"></div>
           </div>
 
+          <!-- Prüfungen erstellen Tab  -->
           <div id="createExam" class="tab-content">
             <h3>Neue Prüfung erstellen</h3>
             <form id="createExamForm">
@@ -298,7 +304,7 @@
             </form>
           </div>
 
-          <!-- Note Tab -->
+          <!-- Note anzeigen Tab -->
           <div id="Note" class="tab-content active">
             <h3>Note</h3>
             <div class="form-group">
@@ -338,7 +344,30 @@
             <div id="NotenListeTable"></div>
           </div>
 
-          <!-- Create Tab (für Professoren) -->
+          <!-- TeilnehmerListe Tab -->
+          <div id="TeilnehmerListe" class="tab-content">
+            <h3>TeilnehmerListe</h3>
+            <div class="form-group">
+              <label for="filterTeilnehmerListePruefung"
+                >Filter nach Prüfungs-ID:</label
+              >
+              <input
+                type="number"
+                id="filterTeilnehmerListePruefung"
+                placeholder="Prüfungs-ID eingeben"
+              />
+              <button
+                id="loadTeilnehmerListeBtn"
+                class="btn"
+                style="margin-top: 10px"
+              >
+                TeilnehmerListe laden
+              </button>
+            </div>
+            <div id="TeilnehmerListeTable"></div>
+          </div>
+
+          <!-- Note erstellen Tab (für Professoren) -->
           <div id="create" class="tab-content">
             <h3>Neue Note erstellen</h3>
             <form id="createNoteForm">
@@ -430,6 +459,10 @@
         if (currentUser.role === "professor") {
           document.getElementById("createTab").classList.remove("hidden");
           document.getElementById("createExamTab").classList.remove("hidden");
+          document
+            .getElementById("TeilnehmerListeTab")
+            .classList.remove("hidden");
+          document.getElementById("NotenListeTab").classList.remove("hidden");
         }
 
         document.getElementById("loginSection").classList.add("hidden");
@@ -518,29 +551,48 @@
       document
         .getElementById("loadNoteBtn")
         .addEventListener("click", async () => {
-          const pruefungsId = document.getElementById("filterPruefung").value;
+          const noteId = document.getElementById("filterPruefung").value;
           let url = `${GRADING_API}/Note/`;
 
-          if (pruefungsId) {
-            url += `?pruefungs_id=${pruefungsId}`;
-          }
+          if (noteId) {
+            url = `${GRADING_API}/Note/${noteId}`;
 
-          try {
-            const response = await fetch(url, {
-              headers: {
-                Authorization: `Bearer ${currentToken}`,
-              },
-            });
+            try {
+              const response = await fetch(url, {
+                headers: {
+                  Authorization: `Bearer ${currentToken}`,
+                },
+              });
 
-            if (response.ok) {
-              const Note = await response.json();
-              displayNote(Note);
-            } else {
-              const error = await response.json();
-              alert("Fehler: " + error.detail);
+              if (response.ok) {
+                const note = await response.json();
+                displayNote([note]); // Einzelne Note als Array übergeben
+              } else {
+                const error = await response.json();
+                alert("Fehler: " + error.detail);
+              }
+            } catch (error) {
+              alert("Verbindungsfehler: " + error.message);
             }
-          } catch (error) {
-            alert("Verbindungsfehler: " + error.message);
+          } else {
+            // Alle Noten laden wenn keine ID angegeben
+            try {
+              const response = await fetch(url, {
+                headers: {
+                  Authorization: `Bearer ${currentToken}`,
+                },
+              });
+
+              if (response.ok) {
+                const notes = await response.json();
+                displayNote(notes);
+              } else {
+                const error = await response.json();
+                alert("Fehler: " + error.detail);
+              }
+            } catch (error) {
+              alert("Verbindungsfehler: " + error.message);
+            }
           }
         });
 
@@ -566,15 +618,16 @@
           }
 
           html += `<td>${note.note_id}</td>
-            <td>${note.pruefungs_id}</td>
-            <td>${note.datum}</td>
-            <td>${note.modul}</td>
-            <td>${note.note}</td>`;
+      <td>${note.pruefungs_id}</td>
+      <td>${note.datum}</td>
+      <td>${note.modul}</td>
+      <td>${note.note}</td>`;
 
           if (currentUser.role === "professor") {
             html += `<td>
-                <button class="btn btn-danger" onclick="deleteNote(${note.note_id})" style="width: auto; padding: 5px 10px;">Löschen</button>
-            </td>`;
+          <button class="btn" onclick="editNote(${note.note_id}, '${note.datum}', '${note.modul}', '${note.note}', ${note.pruefungs_id})" style="width: auto; padding: 5px 10px; margin-right: 5px;">Bearbeiten</button>
+          <button class="btn btn-danger" onclick="deleteNote(${note.note_id})" style="width: auto; padding: 5px 10px;">Löschen</button>
+      </td>`;
           }
 
           html += "</tr>";
@@ -584,6 +637,47 @@
         document.getElementById("NoteTable").innerHTML = html;
       }
 
+      function editNote(noteId, datum, modul, note, pruefungsId) {
+        const newDatum = prompt("Neues Datum (YYYY-MM-DD):", datum);
+        if (newDatum === null) return;
+
+        const newModul = prompt("Neues Modul:", modul);
+        if (newModul === null) return;
+
+        const newNote = prompt("Neue Note:", note);
+        if (newNote === null) return;
+
+        updateNote(noteId, {
+          pruefungs_id: pruefungsId,
+          datum: newDatum,
+          modul: newModul,
+          note: newNote,
+        });
+      }
+
+      //updateNote
+      async function updateNote(noteId, noteData) {
+        try {
+          const response = await fetch(`${GRADING_API}/Note/${noteId}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${currentToken}`,
+            },
+            body: JSON.stringify(noteData),
+          });
+
+          if (response.ok) {
+            alert("Note erfolgreich aktualisiert!");
+            document.getElementById("loadNoteBtn").click();
+          } else {
+            const error = await response.json();
+            alert("Fehler: " + error.detail);
+          }
+        } catch (error) {
+          alert("Verbindungsfehler: " + error.message);
+        }
+      }
       // Load NotenListe
       document
         .getElementById("loadNotenListeBtn")
@@ -591,7 +685,7 @@
           const pruefungsId = document.getElementById(
             "filterNotenListePruefung"
           ).value;
-          let url = `${GRADING_API}/NotenListe/`;
+          let url = `${ENROLLMENT_API}/NotenListe/`;
 
           if (pruefungsId) {
             url += `?pruefungs_id=${pruefungsId}`;
@@ -619,34 +713,72 @@
       // Display NotenListe
       function displayNotenListe(gradesList) {
         let html =
-          '<table class="table"><thead><tr><th>Liste-ID</th><th>Prüfungs-ID</th><th>Note-ID</th><th>Modul</th><th>Note</th><th>Datum</th>';
-
-        if (currentUser.role === "professor") {
-          html += "<th>Aktionen</th>";
-        }
-
-        html += "</tr></thead><tbody>";
+          '<table class="table"><thead><tr><th>Liste-ID</th><th>Prüfungs-ID</th><th>Note-ID</th><th>Modul</th><th>Note</th><th>Datum</th></tr></thead><tbody>';
 
         gradesList.forEach((entry) => {
           html += `<tr>
-              <td>${entry.NotenListe_id}</td>
-              <td>${entry.pruefungs_id}</td>
-              <td>${entry.note_id}</td>
-              <td>${entry.note.modul}</td>
-              <td>${entry.note.note}</td>
-              <td>${entry.note.datum}</td>`;
+            <td>${entry.NotenListe_id}</td>
+            <td>${entry.pruefungs_id}</td>
+            <td>${entry.note_id}</td>
+            <td>${entry.note?.modul || "-"}</td>
+            <td>${entry.note?.note || "-"}</td>
+            <td>${entry.note?.datum || "-"}</td>
+          </tr>`;
+        });
 
-          if (currentUser.role === "professor") {
-            html += `<td>
-                  <button class="btn btn-danger" onclick="deleteNotenListeEntry(${entry.NotenListe_id})" style="width: auto; padding: 5px 10px;">Löschen</button>
-              </td>`;
+        html += "</tbody></table>";
+        document.getElementById("NotenListeTable").innerHTML = html;
+      }
+
+      // Load Teilnehmerliste
+      document
+        .getElementById("loadTeilnehmerListeBtn")
+        .addEventListener("click", async () => {
+          const pruefungsId = document.getElementById(
+            "filterTeilnehmerListePruefung"
+          ).value;
+          let url = `${ENROLLMENT_API}/TeilnehmerListe/`;
+
+          if (pruefungsId) {
+            url += `?pruefungs_id=${pruefungsId}`;
           }
+
+          try {
+            const response = await fetch(url);
+
+            if (response.ok) {
+              const TeilnehmerListe = await response.json();
+              displayTeilnehmerListe(TeilnehmerListe);
+            } else {
+              const error = await response.json();
+              alert("Fehler: " + error.detail);
+            }
+          } catch (error) {
+            alert("Verbindungsfehler: " + error.message);
+          }
+        });
+
+      // Display TeilnehmerListe
+      function displayTeilnehmerListe(teilnehmerListe) {
+        let html =
+          '<table class="table"><thead><tr><th>TeilnehmerListe_id</th><th>Prüfungs-ID</th><th>Matrikelnummer</th><th>Modul</th><th>Professor</th><th>Datum</th>';
+
+        html += "</tr></thead><tbody>";
+
+        teilnehmerListe.forEach((entry) => {
+          html += `<tr>
+            <td>${entry.TeilnehmerListe_id}</td>
+            <td>${entry.pruefungs_id}</td>
+            <td>${entry.matrikelnummer}</td>
+            <td>${entry.exam.modul}</td>
+            <td>${entry.exam.prof_name}</td>
+            <td>${entry.exam.datum}</td>`;
 
           html += "</tr>";
         });
 
         html += "</tbody></table>";
-        document.getElementById("NotenListeTable").innerHTML = html;
+        document.getElementById("TeilnehmerListeTable").innerHTML = html;
       }
 
       // Create Note
@@ -717,34 +849,6 @@
         }
       }
 
-      // Delete NotenListe Entry
-      async function deleteNotenListeEntry(entryId) {
-        if (
-          !confirm("Sind Sie sicher, dass Sie diesen Eintrag löschen möchten?")
-        ) {
-          return;
-        }
-
-        try {
-          const response = await fetch(`${GRADING_API}/NotenListe/${entryId}`, {
-            method: "DELETE",
-            headers: {
-              Authorization: `Bearer ${currentToken}`,
-            },
-          });
-
-          if (response.ok) {
-            alert("Eintrag erfolgreich gelöscht!");
-            document.getElementById("loadNotenListeBtn").click();
-          } else {
-            const error = await response.json();
-            alert("Fehler: " + error.detail);
-          }
-        } catch (error) {
-          alert("Verbindungsfehler: " + error.message);
-        }
-      }
-
       //Display Exams
       function displayExams(exams) {
         let html =
@@ -758,16 +862,17 @@
 
         exams.forEach((exam) => {
           html += `<tr>
-                    <td>${exam.pruefungs_id}</td>
-                    <td>${exam.prof_name}</td>
-                    <td>${exam.ects}</td>
-                    <td>${exam.datum}</td>
-                    <td>${exam.modul}</td>`;
+              <td>${exam.pruefungs_id}</td>
+              <td>${exam.prof_name}</td>
+              <td>${exam.ects}</td>
+              <td>${exam.datum}</td>
+              <td>${exam.modul}</td>`;
 
           if (currentUser && currentUser.role === "professor") {
             html += `<td>
-                        <button class="btn btn-danger" onclick="deleteExam(${exam.pruefungs_id})" style="width: auto; padding: 5px 10px;">Löschen</button>
-                    </td>`;
+                  <button class="btn" onclick="editExam(${exam.pruefungs_id}, '${exam.prof_name}', ${exam.ects}, '${exam.datum}', '${exam.modul}')" style="width: auto; padding: 5px 10px; margin-right: 5px;">Bearbeiten</button>
+                  <button class="btn btn-danger" onclick="deleteExam(${exam.pruefungs_id})" style="width: auto; padding: 5px 10px;">Löschen</button>
+              </td>`;
           }
 
           html += "</tr>";
@@ -776,7 +881,6 @@
         html += "</tbody></table>";
         document.getElementById("examsTable").innerHTML = html;
       }
-
       document
         .getElementById("loadExamsBtn")
         .addEventListener("click", async () => {
@@ -865,6 +969,52 @@
             document.getElementById("createExamSuccess").textContent = "";
           }
         });
+
+      // Edit Exam
+      function editExam(examId, profName, ects, datum, modul) {
+        const newProfName = prompt("Neuer Professor:", profName);
+        if (newProfName === null) return;
+
+        const newEcts = prompt("Neue ECTS:", ects);
+        if (newEcts === null) return;
+
+        const newDatum = prompt("Neues Datum (YYYY-MM-DD):", datum);
+        if (newDatum === null) return;
+
+        const newModul = prompt("Neues Modul:", modul);
+        if (newModul === null) return;
+
+        updateExam(examId, {
+          prof_name: newProfName,
+          ects: parseInt(newEcts),
+          datum: newDatum,
+          modul: newModul,
+        });
+      }
+      async function updateExam(examId, examData) {
+        try {
+          const response = await fetch(`${ENROLLMENT_API}/exams/${examId}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(examData),
+          });
+
+          if (response.ok) {
+            alert("Prüfung erfolgreich aktualisiert!");
+            document.getElementById("loadExamsBtn").click();
+          } else {
+            const error = await response.json();
+            alert(
+              "Fehler: " +
+                (error.detail || "Prüfung konnte nicht aktualisiert werden")
+            );
+          }
+        } catch (error) {
+          alert("Verbindungsfehler: " + error.message);
+        }
+      }
 
       function saveSession() {
         if (currentToken && currentUser) {
