@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, Date, ForeignKey
 from sqlalchemy.orm import declarative_base, relationship
 from pydantic import BaseModel
 from datetime import date
-from typing import List, Optional
+from typing import Optional
 
 Base = declarative_base()
 
@@ -51,9 +51,6 @@ class NotenListe(Base):
     NotenListe_id = Column(Integer, primary_key=True, index=True)
     pruefungs_id = Column(Integer, nullable=False)
     note_id = Column(Integer, nullable=False)
-
-    #note = relationship("Note", back_populates="NotenListen")
-
 
 class TeilnehmerListeCreate(BaseModel):
     pruefungs_id: int
