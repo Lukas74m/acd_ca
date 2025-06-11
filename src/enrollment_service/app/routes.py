@@ -1,4 +1,4 @@
-from fastapi import HTTPException, Depends, Query, status, Header
+from fastapi import HTTPException, Depends, Query, Header
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from database import get_db
@@ -16,24 +16,6 @@ from orm import (
     NotenListeResponse,
     NotenListeWithNote,
 )
-
-# from auth import (
-#     User,
-#     UserCreate,
-#     UserResponse,
-#     LoginRequest,
-#     LoginResponse,
-#     get_current_user,
-#     require_professor,
-#     require_student_or_professor,
-#     authenticate_user,
-#     create_user,
-#     create_session_token,
-#     logout_user,
-#     check_student_access,
-#     get_allowed_pruefungs_ids,
-#     UserRole,
-# )
 
 
 async def get_note_from_grading_service(note_id: int, token: str) -> Optional[dict]:
@@ -118,12 +100,10 @@ def setup_routes(app):
         db: Session = Depends(get_db),
         token: str = Depends(get_session_token),
     ):
-        # current_user = get_current_user(token, db)
-        # require_professor(current_user)
-
+        
         db_entry = TeilnehmerListe(
             pruefungs_id=entry.pruefungs_id, matrikelnummer=entry.matrikelnummer
-        )  # hier
+        )
         db.add(db_entry)
         db.commit()
         db.refresh(db_entry)
@@ -137,25 +117,9 @@ def setup_routes(app):
         db: Session = Depends(get_db),
         token: str = Depends(get_session_token),
     ):
-        print("DEBUG TEST - TeilnehmerListe wurde aufgerufen")
-        # current_user = get_current_user(token, db)
-        # require_student_or_professor(current_user)
-
         query = db.query(TeilnehmerListe)
 
-        # if current_user.role == UserRole.student:
-        #     allowed_ids = get_allowed_pruefungs_ids(current_user)
-        #     if not allowed_ids:
-        #         return []
-        #     query = query.filter(TeilnehmerListe.pruefungs_id.in_(allowed_ids))
-
         if pruefungs_id:
-            # if current_user.role == UserRole.student:
-            #     if not check_student_access(current_user, pruefungs_id):
-            #         raise HTTPException(
-            #             status_code=status.HTTP_403_FORBIDDEN,
-            #             detail="Access denied for this exam",
-            #         )
             query = query.filter(TeilnehmerListe.pruefungs_id == pruefungs_id)
 
         entries = query.offset(skip).limit(limit).all()
@@ -186,9 +150,6 @@ def setup_routes(app):
         db: Session = Depends(get_db),
         token: str = Depends(get_session_token),
     ):
-        # note = note_db.query(Note).filter(Note.note_id == entry.note_id).first()
-        # if not note:
-        #    raise HTTPException(status_code=404, detail="Note not found")
 
         db_entry = NotenListe(pruefungs_id=entry.pruefungs_id, note_id=entry.note_id)
         db.add(db_entry)
@@ -212,7 +173,6 @@ def setup_routes(app):
 
         result = []
         for entry in entries:
-            # Note vom anderen Service holen
             note_data = await get_note_from_grading_service(entry.note_id, token)
             result.append(
                 {
@@ -224,27 +184,6 @@ def setup_routes(app):
             )
 
         return result
-
-    # @app.delete("/NotenListe/{NotenListe_id}")
-    # async def delete_NotenListe_entry(
-    #     NotenListe_id: int,
-    #     db: Session = Depends(get_db),
-    #     token: str = Depends(get_session_token),
-    # ):
-    #     current_user = get_current_user(token, db)
-    #     require_professor(current_user)
-
-    #     entry = (
-    #         db.query(NotenListe)
-    #         .filter(NotenListe.NotenListe_id == NotenListe_id)
-    #         .first()
-    #     )
-    #     if entry is None:
-    #         raise HTTPException(status_code=404, detail="NotenListe entry not found")
-
-    #     db.delete(entry)
-    #     db.commit()
-    #     return {"message": "NotenListe entry deleted successfully"}
 
     @app.put("/exams/{exam_id}", response_model=ExamResponse)
     async def update_exam(
