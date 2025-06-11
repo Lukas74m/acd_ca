@@ -3,6 +3,7 @@ from sqlalchemy.orm import declarative_base
 from pydantic import BaseModel
 from datetime import date
 
+# Basis für Definition von SQLAlchemy Modellen
 Base = declarative_base()
 
 
@@ -16,6 +17,7 @@ class Note(Base):
     note = Column(String(5), nullable=False)
 
 
+# Pydantic Modell für die Erstellung einer Note
 class NoteCreate(BaseModel):
     pruefungs_id: int
     datum: date
@@ -23,6 +25,7 @@ class NoteCreate(BaseModel):
     note: str
 
 
+# Pydantic Modell für die Ausgabe einer Note
 class NoteResponse(BaseModel):
     note_id: int
     pruefungs_id: int
@@ -31,4 +34,4 @@ class NoteResponse(BaseModel):
     note: str
 
     class Config:
-        from_attributes = True
+        from_attributes = True  # Mapping von ORM-Objekten

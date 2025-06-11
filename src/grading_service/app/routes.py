@@ -26,7 +26,7 @@ from auth import (
 
 
 def get_session_token(authorization: str = Header(None)):
-    """Extrahiert Session-Token aus Authorization-Header"""
+    # Extrahiert Session-Token aus Authentifizierungs-Header
     if not authorization:
         return None
     if authorization.startswith("Bearer "):
@@ -35,7 +35,7 @@ def get_session_token(authorization: str = Header(None)):
 
 
 def setup_routes(app):
-    """Setup all API routes for Note-Microservice with Authentication"""
+    # Setup alle API Routen für Note-Microservice mit Authentifizierung
 
     @app.get("/")
     async def root():
@@ -47,14 +47,14 @@ def setup_routes(app):
 
     @app.post("/register", response_model=UserResponse)
     async def register_user(user: UserCreate, db: Session = Depends(get_db)):
-        """Neuen Benutzer registrieren"""
+        # Neuen Benutzer registrieren
         return create_user(db, user)
 
     @app.post("/login", response_model=LoginResponse)
     async def login_for_access_token(
         login_data: LoginRequest, db: Session = Depends(get_db)
     ):
-        """Benutzer anmelden und Session-Token erhalten"""
+        # Benutzer anmelden und Session-Token erhalten
         user = authenticate_user(db, login_data.username, login_data.password)
         if not user:
             raise HTTPException(
@@ -77,12 +77,13 @@ def setup_routes(app):
     async def read_users_me(
         token: str = Depends(get_session_token), db: Session = Depends(get_db)
     ):
-        """Aktuelle Benutzerinformationen abrufen"""
+        # Aktuelle Benutzerinformationen abrufen
         current_user = get_current_user(token, db)
         return current_user
 
     @app.post("/logout")
     async def logout(token: str = Depends(get_session_token)):
+        # Benutzer abmelden und Session-Token löschen
         if token:
             success = logout_user(token)
             if success:
@@ -97,6 +98,7 @@ def setup_routes(app):
         db: Session = Depends(get_db),
         token: str = Depends(get_session_token),
     ):
+        # Neue Note erstellen (Nur für Professoren)
         current_user = get_current_user(token, db)
         require_professor(current_user)
 
@@ -119,6 +121,7 @@ def setup_routes(app):
         db: Session = Depends(get_db),
         token: str = Depends(get_session_token),
     ):
+        # Noten abrufen
         current_user = get_current_user(token, db)
         require_student_or_professor(current_user)
 
@@ -148,6 +151,7 @@ def setup_routes(app):
         db: Session = Depends(get_db),
         token: str = Depends(get_session_token),
     ):
+        # Einzelne Noten abrufen
         current_user = get_current_user(token, db)
         require_student_or_professor(current_user)
 
@@ -170,6 +174,7 @@ def setup_routes(app):
         db: Session = Depends(get_db),
         token: str = Depends(get_session_token),
     ):
+        # Note aktualisieren (nur für Professoren)
         current_user = get_current_user(token, db)
         require_professor(current_user)
 
@@ -192,6 +197,7 @@ def setup_routes(app):
         db: Session = Depends(get_db),
         token: str = Depends(get_session_token),
     ):
+        # Note löschen (nur für Professoren)
         current_user = get_current_user(token, db)
         require_professor(current_user)
 

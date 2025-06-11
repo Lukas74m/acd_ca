@@ -12,15 +12,17 @@ class MicroService:
             version="1.0.0",
             description="Microservice für Notenverwaltung",
         )
+        # CORS Middleware für Cross-Origin-Anfragen
         self.app.add_middleware(
             CORSMiddleware,
-            allow_origins=["*"],
-            allow_credentials=True,
-            allow_methods=["*"],
-            allow_headers=["*"],
+            allow_origins=["*"],  # Alle Ursprünge zulassen
+            allow_credentials=True,  # Cookies sowie Auth-Header zulassen
+            allow_methods=["*"],  # Alle HTTP Methoden zulassen
+            allow_headers=["*"],  # Alle Header zulassen
         )
+        # Erstelle Datenbankfelder, wenn nicht vorhanden
         Base.metadata.create_all(bind=engine, checkfirst=True)
-
+        # Richte Routen ein
         setup_routes(self.app)
 
 
@@ -28,4 +30,5 @@ if __name__ == "__main__":
     import uvicorn
 
     service = MicroService()
+    # FastAPI-Anwendung starten
     uvicorn.run(service.app, host="0.0.0.0", port=8001)

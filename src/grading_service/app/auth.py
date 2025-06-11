@@ -7,6 +7,7 @@ from typing import Optional
 from database import get_db
 from orm import Base
 
+# Aktive Benutzersitzungen speichern (In-Memory)
 active_sessions = {}
 
 
@@ -61,6 +62,7 @@ def get_user_by_email(db: Session, email: str):
 
 
 def create_user(db: Session, user: UserCreate):
+    # Prüfen ob Benutzername oder E-Mail bereits registiert sind
     if get_user_by_username(db, user.username):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -70,7 +72,7 @@ def create_user(db: Session, user: UserCreate):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered"
         )
-
+    # Falls nein neuen Benutzer erstellen
     db_user = User(
         username=user.username,
         email=user.email,
@@ -95,12 +97,15 @@ def authenticate_user(db: Session, username: str, password: str):
 def create_session_token(username: str) -> str:
     import uuid
 
+    # Zufalligen Session Token generieren
     token = str(uuid.uuid4())
+    # Token der aktiven Sitzung hinzufügen
     active_sessions[token] = username
     return token
 
 
 def get_user_from_token(token: str, db: Session) -> Optional[User]:
+    # Benutzernamen aus dem Token abrufen
     username = active_sessions.get(token)
     if not username:
         return None
@@ -108,6 +113,7 @@ def get_user_from_token(token: str, db: Session) -> Optional[User]:
 
 
 def logout_user(token: str):
+    # Session Token entfernen
     if token in active_sessions:
         del active_sessions[token]
         return True
@@ -115,6 +121,7 @@ def logout_user(token: str):
 
 
 def get_current_user(token: str = "", db: Session = Depends(get_db)):
+    # Benutzer anhand des Tokens abrufen
     if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="No session token provided"
@@ -129,6 +136,7 @@ def get_current_user(token: str = "", db: Session = Depends(get_db)):
 
 
 def require_professor(current_user: User = Depends(get_current_user)):
+    # Prüfen ob der Benutzer Professor ist
     if current_user.role != UserRole.professor:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Professor access required"
@@ -137,6 +145,7 @@ def require_professor(current_user: User = Depends(get_current_user)):
 
 
 def require_student_or_professor(current_user: User = Depends(get_current_user)):
+    # Prüfen ob der Benutzer Student oder Professor ist
     if current_user.role not in [UserRole.student, UserRole.professor]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -146,6 +155,7 @@ def require_student_or_professor(current_user: User = Depends(get_current_user))
 
 
 def check_student_access(current_user: User, pruefungs_id: int) -> bool:
+    # Zugriffsprüfung für Studenten auf bestimmte Prüfungs-ID
     if current_user.role == UserRole.professor:
         return True
 
@@ -161,6 +171,7 @@ def check_student_access(current_user: User, pruefungs_id: int) -> bool:
 
 
 def get_allowed_pruefungs_ids(current_user: User) -> list:
+    # Erlaubte PrüfungsID für Studenten abrufen
     if current_user.role == UserRole.professor:
         return None
 
