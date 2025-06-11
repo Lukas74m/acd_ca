@@ -19,9 +19,3 @@ COPY . .
 EXPOSE 8001
 
 CMD ["python", "app/main.py"]
-
-# Datenbank neu starten
-# docker compose down -v && docker compose up -d
-
-# Alle Noten abrufen
-# curl http://localhost:8000/notes/
