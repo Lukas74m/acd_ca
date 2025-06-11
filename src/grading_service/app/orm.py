@@ -1,8 +1,7 @@
-from sqlalchemy import Column, Integer, String, Date, ForeignKey
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy import Column, Integer, String, Date
+from sqlalchemy.orm import declarative_base
 from pydantic import BaseModel
 from datetime import date
-from typing import List, Optional
 
 Base = declarative_base()
 
@@ -33,5 +32,3 @@ class NoteResponse(BaseModel):
 
     class Config:
         from_attributes = True
-
-

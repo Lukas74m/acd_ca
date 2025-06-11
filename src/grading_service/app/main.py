@@ -10,7 +10,7 @@ class MicroService:
         self.app = FastAPI(
             title="Note-Microservice",
             version="1.0.0",
-            description="Microservice für Note- und NotenListenverwaltung",
+            description="Microservice für Notenverwaltung",
         )
         self.app.add_middleware(
             CORSMiddleware,

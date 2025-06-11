@@ -8,7 +8,6 @@ from orm import (
     NoteResponse,
 )
 from auth import (
-    User,
     UserCreate,
     UserResponse,
     LoginRequest,
@@ -203,4 +202,3 @@ def setup_routes(app):
         db.delete(note)
         db.commit()
         return {"message": "Note deleted successfully"}
-
